@@ -42,7 +42,7 @@ config = configparser.ConfigParser()
 result_list = config.read(CONFIG_FILE)
 if not result_list:
     raise Exception("Missing config file spyspark.cfg")
-host_ops_addr = config['Host']['OpsAddress']
+host_ops_addr = config['Host']['Address'] + "about"
 
 
 # Exception raised if requested authentication method from server is not SCRAM
