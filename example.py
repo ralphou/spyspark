@@ -13,6 +13,16 @@ Created on Mon Nov 20 00:33:22 2017
 import spyspark
 import re
 
+"""Test zinc, csv, json formats with axon_request and request functions"""
+query = 'readAll(site).findAll(s => s->dis != "X1")'
+spyspark.axon_request(query, "text/csv")
+spyspark.axon_request(query, "text/zinc")
+spyspark.axon_request(query, "application/json")
+spyspark.request("http://skyspark.lbl.gov/api/flexlab/eval",\
+                 """{\n"meta":{"ver":"3.0"},\n\
+                       "cols":[{"name":"expr"}],\n\
+                       "rows":[{"expr":"readAll(site)"}]}"""
+                ,"application/json","application/json")
 
 """Create a new site through Axon code"""
 # Write Axon expression (can only be one line for REST Eval operation)

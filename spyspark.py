@@ -40,11 +40,15 @@ def about() -> str:
     return request(uri)
 
 
-def axon_request(query: str, content_type: str = "text/zinc") -> str:
+def axon_request(query: str, result_type: str = "text/zinc") -> str:
     uri = host_addr + "eval"
+    
+    # Encode special characters
     query = query.replace("\\$","\\\\\$").replace('"', '\\\"')
+    # Encode request as Zinc
     data = f"""ver:"3.0"\nexpr\n"{query}"\n""".encode('utf-8')
-    return request(uri, data, content_type)
+
+    return request(uri, data, result_type, request_type="text/zinc")
 
 
 def his_write(data) -> str:
@@ -58,7 +62,8 @@ def commit(data) -> str:
 
 
 def request(request_uri: str, data: str = None,
-            content_type: str = "text/zinc") -> str:
+            result_type: str = "text/zinc",
+            request_type: str = "text/zinc") -> str:
     """Process REST operation, return resulting text
     
     Use SkySpark REST API with uri provided as first argument.
@@ -74,20 +79,22 @@ def request(request_uri: str, data: str = None,
     data         -- Data to use with POST request, or None for GET
     result_type  -- Requested MIME type in which to receive results
                     (default: "text/zinc" for Zinc format)
+    request_type -- MIME type in which the request data is provided
     """
     # Attempt to send request; if an authorization issue is detected,
     # retry after updating the authorization token
     for i in range(0, MAX_ATTEMPTS):
         auth_token = scram.current_token()
         headers= {"authorization": "BEARER authToken="+auth_token,
-                  "accept": content_type}
+                  "accept": result_type,
+                  "content-type": request_type}
         if data is None:
             r = request.get(request_uri, headers=headers)
         else:
             r = requests.post(request_uri, data=data, headers=headers)
         if r.status_code == 200:
             if r.text != "empty\n":
-                if content_type == "text/csv":
+                if result_type == "text/csv":
                     text = re.sub('â\x9c\x93','True',r.text)    # Checkmarks
                     text = re.sub('Â','',text)
                     return text
